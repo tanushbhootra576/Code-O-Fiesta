@@ -22,8 +22,8 @@ function mapToVerdictEnum(status: string): SubmissionVerdict {
   switch (status) {
     case 'accepted': return SubmissionVerdict.ACCEPTED;
     case 'wrong_answer': return SubmissionVerdict.WRONG_ANSWER;
-    case 'time_limit_exceeded': return SubmissionVerdict.TIME_LIMIT_EXCEEDED;
-    case 'memory_limit_exceeded': return SubmissionVerdict.MEMORY_LIMIT_EXCEEDED;
+    case 'time_limit_exceeded': return SubmissionVerdict.TIME_LIMIT;
+    case 'memory_limit_exceeded': return SubmissionVerdict.MEMORY_LIMIT;
     case 'compilation_error': return SubmissionVerdict.COMPILATION_ERROR;
     case 'runtime_error': return SubmissionVerdict.RUNTIME_ERROR;
     default: return SubmissionVerdict.PENDING;

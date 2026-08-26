@@ -70,7 +70,9 @@ export async function POST(request: Request) {
           language,
           submissionNumber: count + 1,
           verdict: 'PENDING',
-          'judge0.token': tokens.join(','), // Store tokens in DB
+          judge0: {
+            token: tokens.join(','),
+          },
         });
 
         submissionId = sub._id.toString();
