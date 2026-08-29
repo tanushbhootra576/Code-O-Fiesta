@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import AuthGuard from '@/app/guards/AuthGuard';
 import ParticipantLayout from '@/components/layout/ParticipantLayout';
 import EventProgress from '@/components/event/EventProgress';
 import Leaderboard from '@/components/results/Leaderboard';
@@ -27,7 +28,7 @@ interface StandingTeam {
   roundDetails: RoundDetail[];
 }
 
-export default function LeaderboardPage() {
+function LeaderboardPageContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [standings, setStandings] = useState<StandingTeam[]>([]);
@@ -118,5 +119,13 @@ export default function LeaderboardPage() {
         )}
       </div>
     </ParticipantLayout>
+  );
+}
+
+export default function LeaderboardPage() {
+  return (
+    <AuthGuard requiredRole="PARTICIPANT">
+      <LeaderboardPageContent />
+    </AuthGuard>
   );
 }

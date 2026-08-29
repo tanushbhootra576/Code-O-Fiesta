@@ -79,7 +79,6 @@ export const ProblemTopic = {
   STRING_MANIPULATION: 'STRING_MANIPULATION',
   ARRAYS_LOGIC: 'ARRAYS_LOGIC',
   LOOPS_PATTERNS: 'LOOPS_PATTERNS',
-  GENERAL: 'GENERAL',
 } as const;
 
 export type ProblemTopic = (typeof ProblemTopic)[keyof typeof ProblemTopic];

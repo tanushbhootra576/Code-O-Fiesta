@@ -1,4 +1,8 @@
-import mongoose, { Schema, type InferSchemaType, type Model } from 'mongoose';
+import mongoose, {
+  Schema,
+  type InferSchemaType,
+  type Model,
+} from 'mongoose';
 
 import { TeamMember, UserRole } from '@/constants/event';
 
@@ -12,7 +16,6 @@ const UserSchema = new Schema(
     email: {
       type: String,
       required: true,
-      unique: true,
       lowercase: true,
       trim: true,
     },
@@ -50,11 +53,21 @@ const UserSchema = new Schema(
   },
 );
 
-UserSchema.index({ email: 1 }, { unique: true });
 UserSchema.index({ teamId: 1 });
-UserSchema.index({ teamId: 1, teamMember: 1 }, { unique: true });
 
-export type UserDocument = InferSchemaType<typeof UserSchema>;
+UserSchema.index(
+  { teamId: 1, teamMember: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      teamId: { $exists: true, $ne: null },
+      teamMember: { $exists: true, $ne: null },
+    },
+  },
+);
+
+export type UserDocument =
+  InferSchemaType<typeof UserSchema>;
 
 const User =
   (mongoose.models.User as Model<UserDocument> | undefined) ||

@@ -1,30 +1,47 @@
-import { NextResponse } from 'next/server';
-import connectDB from '@/lib/db';
-import Submission from '@/models/Submission';
+import { NextRequest, NextResponse } from 'next/server';
+import { Types } from 'mongoose';
+import {
+  getAuthenticatedUser,
+  getUserTeam,
+  getProblemStateForTeam,
+  getProblemById,
+} from '@/app/api/_services/problem.service';
 
 export async function GET(
-  request: Request,
+  _req: NextRequest,
   { params }: { params: Promise<{ problemId: string }> }
 ) {
   try {
     const { problemId } = await params;
-    
-    if (process.env.MONGODB_URI) {
-      try {
-        await connectDB();
-        // Check if there is any accepted submission for this problem
-        const solvedSubmission = await Submission.findOne({
-          problemId,
-          verdict: 'ACCEPTED'
-        });
-        return NextResponse.json({ solved: !!solvedSubmission });
-      } catch (dbErr) {
-        console.error('Failed to query problem solve state:', dbErr);
-      }
+
+    if (!Types.ObjectId.isValid(problemId)) {
+      return NextResponse.json({ error: 'Invalid problemId' }, { status: 400 });
     }
 
-    return NextResponse.json({ solved: false });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    const user = await getAuthenticatedUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
+    }
+
+    const userId = (user as any)._id as Types.ObjectId;
+
+    const team = await getUserTeam(userId);
+    if (!team) {
+      return NextResponse.json({ error: 'No team found for this user' }, { status: 404 });
+    }
+
+    const teamId = (team as any)._id as Types.ObjectId;
+
+    const problem = await getProblemById(problemId);
+    if (!problem) {
+      return NextResponse.json({ error: 'Problem not found' }, { status: 404 });
+    }
+
+    const state = await getProblemStateForTeam(problemId, teamId);
+
+    return NextResponse.json(state);
+  } catch (err: unknown) {
+    console.error('[GET /api/problems/[problemId]/state]', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

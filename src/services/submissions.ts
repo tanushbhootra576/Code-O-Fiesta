@@ -2,18 +2,22 @@ import { apiCall } from '@/lib/api';
 import { RunResult, SubmissionResult } from '@/types/submission';
 
 export const submissionsService = {
-  runCode: async (payload: {
+  runCode: async (params: {
     problemId: string;
     code: string;
     language: string;
     customInput?: string;
+    mode?: 'examples' | 'custom';
   }): Promise<RunResult> => {
     return apiCall('/api/submissions/run', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        ...params,
+        mode: params.mode || (params.customInput ? 'custom' : 'examples'),
+      }),
     });
   },
 
@@ -21,6 +25,7 @@ export const submissionsService = {
     problemId: string;
     code: string;
     language: string;
+    roundNumber?: number;
     isFirstAttempt?: boolean;
   }): Promise<{ submissionId: string }> => {
     return apiCall('/api/submissions/submit', {

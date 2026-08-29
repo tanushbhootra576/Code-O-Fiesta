@@ -6,7 +6,7 @@ export interface ErrorStateProps {
   title?: string;
   message?: string;
   onRetry?: () => void;
-  variant?: 'general' | 'connection' | 'unauthorized';
+  variant?: 'general' | 'connection' | 'unauthorized' | 'access-denied';
   className?: string;
 }
 
@@ -30,6 +30,7 @@ export default function ErrorState({
           ),
         };
       case 'unauthorized':
+      case 'access-denied':
         return {
           bg: 'bg-purple-500/10 border-purple-500/30',
           titleColor: 'text-purple-400',

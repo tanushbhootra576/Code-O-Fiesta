@@ -1,85 +1,113 @@
 import { NextResponse } from 'next/server';
-import { submitCode, LANGUAGE_IDS } from '@/lib/judge0';
+import connectDB from '@/lib/db';
+import Problem from '@/models/Problem';
+import { executeTestCases, calculateVerdict, ExecutionMode } from '../../_services/judge.service';
 
 export async function POST(request: Request) {
+  const t0 = performance.now();
+  
   try {
     const body = await request.json();
-    const { code, language, customInput } = body;
+    const { code, language, customInput, problemId, mode = 'custom' } = body;
+    const tParsed = performance.now();
 
-    const languageId = LANGUAGE_IDS[language];
-    if (!languageId) {
-      return NextResponse.json({ error: 'Unsupported language' }, { status: 400 });
+    let cpuTimeLimit = 2.0;
+    let memoryLimit = 128000;
+    let testCases: { input: string; expectedOutput?: string }[] = [];
+
+    if (mode === 'custom') {
+      testCases = [{ input: customInput || '' }];
     }
 
-    // Submit to Judge0 and wait for the result
-    let result = await submitCode({
-      source_code: code,
-      language_id: languageId,
-      stdin: customInput || '',
-    }, true);
+    let tDbStart = performance.now();
+    let tDbEnd = tDbStart;
 
-    // If Judge0 returns asynchronously or is still processing, poll for completion
-    if (!result.status || result.status.id === 1 || result.status.id === 2) {
-      if (!result.token) {
-        throw new Error('Judge0 returned incomplete response without a token');
-      }
-      
-      const { getBatchSubmissions } = await import('@/lib/judge0');
-      let attempts = 0;
-      const maxAttempts = 15; // 15 seconds max wait
-      
-      while (attempts < maxAttempts) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        const batch = await getBatchSubmissions([result.token]);
-        
-        if (batch.submissions && batch.submissions.length > 0) {
-          const sub = batch.submissions[0];
-          if (sub.status && sub.status.id !== 1 && sub.status.id !== 2) {
-            result = sub;
-            break;
+    if (problemId && process.env.MONGODB_URI) {
+      try {
+        tDbStart = performance.now();
+        await connectDB();
+        const problem = await Problem.findById(problemId);
+        tDbEnd = performance.now();
+        if (problem) {
+          cpuTimeLimit = problem.cpuTimeLimit || 2.0;
+          memoryLimit = problem.memoryLimit || 128000;
+          
+          if (mode === 'examples') {
+            // Priority: visibleTestCases then examples
+            const visible = problem.visibleTestCases || [];
+            if (visible.length > 0) {
+              testCases = visible;
+            } else if (problem.examples && problem.examples.length > 0) {
+              testCases = problem.examples.map(ex => ({
+                input: ex.input,
+                expectedOutput: ex.output,
+              }));
+            }
           }
         }
-        attempts++;
-      }
-      
-      if (!result.status || result.status.id === 1 || result.status.id === 2) {
-        throw new Error('Execution timed out while waiting for Judge0');
+      } catch (e) {
+        tDbEnd = performance.now();
+        console.error('Error fetching problem details for run:', e);
       }
     }
 
-    // Map Judge0 status to IDE expected format
-    // Judge0 status mapping:
-    // 3: Accepted
-    // 4: Wrong Answer
-    // 5: Time Limit Exceeded
-    // 6: Compilation Error
-    // 7, 8, 9, 10, 11, 12: Runtime Errors
-    let status = 'success';
-    let exitCode = 0;
-    
-    if (result.status.id === 6) {
-      status = 'compilation_error';
-      exitCode = 1;
-    } else if (result.status.id === 5) {
-      status = 'time_limit_exceeded';
-      exitCode = 124;
-    } else if (result.status.id >= 7 && result.status.id <= 12) {
-      status = 'runtime_error';
-      exitCode = 136;
+    if (testCases.length === 0 && mode === 'examples') {
+      // Fallback if DB failed or no examples exist
+      testCases = [{ input: '4\nword\nlocalization\ninternationalization\npneumonoultramicroscopicsilicovolcanoconiosis', expectedOutput: 'word\nl10n\ni18n\np43s' }];
     }
 
-    const decodeBase64 = (str: string | null) => str ? Buffer.from(str, 'base64').toString('utf-8') : '';
+    const tJudgeStart = performance.now();
+    const results = await executeTestCases({
+      sourceCode: code,
+      language,
+      testCases,
+      cpuTimeLimit,
+      memoryLimit,
+      mode: mode as ExecutionMode,
+    });
+    const tJudgeEnd = performance.now();
+
+    const _timings = {
+      totalMs: Math.round(performance.now() - t0),
+      parseMs: Math.round(tParsed - t0),
+      mongoMs: Math.round(tDbEnd - tDbStart),
+      judge0Ms: Math.round(tJudgeEnd - tJudgeStart),
+      testCaseCount: testCases.length,
+      language,
+      mode,
+    };
+
+    console.log('[RUN TIMINGS]', JSON.stringify(_timings));
+
+    if (mode === 'custom') {
+      const res = results[0];
+      return NextResponse.json({
+        mode: 'custom',
+        status: res.verdict === 'COMPILATION_ERROR' || res.verdict === 'RUNTIME_ERROR' || res.verdict === 'TIME_LIMIT_EXCEEDED' ? res.verdict : 'SUCCESS',
+        verdict: res.verdict,
+        stdout: res.actualOutput,
+        stderr: res.stderr,
+        compileOutput: res.compileOutput,
+        executionTime: res.executionTime,
+        memory: res.memory,
+        _timings,
+      });
+    }
+
+    const verdict = calculateVerdict(results);
+    const passed = results.filter(r => r.verdict === 'ACCEPTED').length;
 
     return NextResponse.json({
-      stdout: decodeBase64(result.stdout),
-      stderr: decodeBase64(result.stderr) || decodeBase64(result.compile_output) || decodeBase64(result.message),
-      exitCode,
-      timeMs: parseFloat(result.time || '0') * 1000,
-      memoryKb: result.memory || 0,
-      matchesExpected: false, // Run endpoint doesn't grade against expected
+      mode: 'examples',
+      verdict,
+      passed,
+      total: results.length,
+      cases: results,
+      _timings,
     });
+
   } catch (err: any) {
     console.error('Judge0 Run Error:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: err.message, _timings: { totalMs: Math.round(performance.now() - t0) } }, { status: 500 });
   }
 }

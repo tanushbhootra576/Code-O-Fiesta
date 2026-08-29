@@ -83,6 +83,10 @@ const Round2QuestionSchema = new Schema(
       type: String,
       default: '',
     },
+    hasSeenBothPhases: {
+      type: Boolean,
+      default: false,
+    },
   },
   { _id: false, strict: true },
 );

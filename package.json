@@ -6,10 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed:round1": "node --env-file=.env.local --import tsx scripts/seed-round1.ts",
+    "seed:round3": "node --env-file=.env.local --import tsx scripts/seed-round3.ts",
+    "round1:active": "node --env-file=.env.local --import tsx scripts/set-round1-active.ts"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
+    "argon2": "^0.45.1",
+    "jose": "^6.2.10",
     "mongoose": "^9.9.3",
     "next": "16.3.2",
     "react": "19.2.8",
@@ -17,7 +22,9 @@
     "zod": "^4.4.3",
     "react-markdown": "^10.1.0",
     "rehype-highlight": "^7.0.2",
-    "rehype-katex": "^7.0.1"
+    "rehype-katex": "^7.0.1",
+    "tree-sitter-wasms": "^0.1.13",
+    "web-tree-sitter": "^0.20.8"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -27,6 +34,10 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.2",
     "tailwindcss": "^4",
+    "tsx": "^4.23.12",
     "typescript": "^5"
+  },
+  "allowScripts": {
+    "argon2@0.45.1": true
   }
 }

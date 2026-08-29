@@ -1,0 +1,11 @@
+--- src/app/round-2/problem/[problemId]/page.tsx
++++ src/app/round-2/problem/[problemId]/page.tsx
+@@ -107,15 +107,17 @@
+ 
+   const roundStartedAt = roundState.phaseStartedAt ? new Date(roundState.phaseStartedAt).toISOString() : null;
+   const roundEndsAt = roundState.phaseEndsAt ? new Date(roundState.phaseEndsAt).toISOString() : null;
++  
++  const msLeft = roundState.phaseEndsAt ? Math.max(0, new Date(roundState.phaseEndsAt).getTime() - Date.now()) : 600000;
+ 
+   return (
+     <div className="flex min-h-screen flex-col overflow-hidden bg-[#0a0a1a] text-white">

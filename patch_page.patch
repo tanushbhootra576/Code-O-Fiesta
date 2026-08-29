@@ -1,0 +1,73 @@
+--- src/app/round-2/page.tsx
++++ src/app/round-2/page.tsx
+@@ -1,13 +1,46 @@
+ 'use client';
+ 
+-import Link from 'next/link';
++import { useState } from 'react';
++import { useRouter } from 'next/navigation';
+ import AuthGuard from '@/app/guards/AuthGuard';
+ import ParticipantLayout from '@/components/layout/ParticipantLayout';
+ import RelayInstructions from '@/components/round2/RelayInstructions';
+-
+-const ROUND_2_ENTRY_PROBLEM_ID = 'prob-1';
++import { problemsService } from '@/services/problems';
+ 
+ function Round2PageContent() {
++  const router = useRouter();
++  const [loading, setLoading] = useState(false);
++
++  const handleEnterRound = async () => {
++    try {
++      setLoading(true);
++      // Start the round
++      await problemsService.startRound(2);
++      
++      // Fetch current state
++      const stateRes = await problemsService.fetchRoundState(2);
++      const qNum = stateRes.currentQuestionNumber || 1;
++      
++      // Fetch questions
++      const qsRes = await problemsService.fetchRoundProblems(2);
++      let problemId = 'prob-1'; // fallback
++      
++      const questions = (qsRes as any).questions;
++      if (questions && Array.isArray(questions)) {
++        const qIdx = qNum - 1;
++        if (questions[qIdx] && questions[qIdx].problem && questions[qIdx].problem._id) {
++          problemId = questions[qIdx].problem._id;
++        } else if (questions[0] && questions[0].problem && questions[0].problem._id) {
++          problemId = questions[0].problem._id;
++        }
++      }
++      
++      router.push(`/round-2/problem/${problemId}`);
++    } catch (err) {
++      console.error(err);
++      setLoading(false);
++    }
++  };
++
+   return (
+     <ParticipantLayout>
+       <style>{`
+@@ -49,15 +82,15 @@
+               Problem + editor
+             </span>
+           </div>
+ 
+-          <Link
+-            href={`/round-2/problem/${ROUND_2_ENTRY_PROBLEM_ID}`}
++          <button
++            onClick={handleEnterRound}
++            disabled={loading}
+             className="mt-8 inline-flex items-center gap-2 rounded-lg border border-purple-400/50 bg-purple-600 px-5 py-3 text-xs font-mono font-bold tracking-wider text-white shadow-lg shadow-purple-900/30 transition hover:bg-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-[#0d0e24] disabled:opacity-50"
+           >
+-            ENTER ROUND 2
++            {loading ? 'STARTING...' : 'ENTER ROUND 2'}
+             <span aria-hidden="true">→</span>
+-          </Link>
++          </button>
+         </div>
+       </section>
+ 

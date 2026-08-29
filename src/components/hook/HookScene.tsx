@@ -32,27 +32,27 @@ export default function HookScene() {
   }, [reducedMotion]);
 
   return (
-    <div className="relative w-full min-h-screen bg-[#05070d] text-white overflow-hidden flex flex-col justify-between select-none">
+    <div className="relative w-full min-h-screen bg-[#05060f] text-white overflow-hidden flex flex-col justify-between select-none">
       
-      {/* 1. DARK CINEMATIC BACKGROUND ENVIRONMENT */}
-      <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-rose-950/20 via-[#070a14] to-[#040508]" />
+      {/* 1. DARK CINEMATIC NEON PURPLE BACKGROUND ENVIRONMENT */}
+      <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-950/30 via-[#090b1c] to-[#04050d]" />
 
       {/* Perspective Racing Track Grid Lines */}
-      <div className="absolute inset-0 z-0 opacity-25 pointer-events-none overflow-hidden">
+      <div className="absolute inset-0 z-0 opacity-30 pointer-events-none overflow-hidden">
         <div
-          className="absolute w-[200%] h-[200%] -left-[50%] -top-[50%] bg-[linear-gradient(to_right,#1f293d_1px,transparent_1px),linear-gradient(to_bottom,#1f293d_1px,transparent_1px)] bg-[size:4rem_4rem] transform rotate-12 skew-x-12 animate-[gridMove_8s_linear_infinite]"
+          className="absolute w-[200%] h-[200%] -left-[50%] -top-[50%] bg-[linear-gradient(to_right,#2a1b4e_1px,transparent_1px),linear-gradient(to_bottom,#2a1b4e_1px,transparent_1px)] bg-[size:4rem_4rem] transform rotate-12 skew-x-12 animate-[gridMove_8s_linear_infinite]"
         />
       </div>
 
       {/* Road Horizon Speed Beam */}
-      <div className="absolute top-[55%] left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-rose-500/50 to-transparent blur-[1px]" />
-      <div className="absolute top-[55%] left-0 w-full h-[120px] bg-gradient-to-b from-rose-500/10 to-transparent pointer-events-none" />
+      <div className="absolute top-[55%] left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-purple-500/60 to-transparent blur-[1px]" />
+      <div className="absolute top-[55%] left-0 w-full h-[140px] bg-gradient-to-b from-purple-600/15 via-indigo-600/5 to-transparent pointer-events-none" />
 
       {/* Background Ambient Particles & Dust */}
       <div className="absolute inset-0 z-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/5 w-2 h-2 rounded-full bg-cyan-400/40 blur-xs animate-ping" />
-        <div className="absolute top-1/3 right-1/4 w-3 h-3 rounded-full bg-rose-500/40 blur-xs animate-pulse" />
-        <div className="absolute bottom-1/3 left-1/3 w-2 h-2 rounded-full bg-rose-400/30 blur-xs animate-ping" />
+        <div className="absolute top-1/4 left-1/5 w-2 h-2 rounded-full bg-cyan-400/50 blur-xs animate-ping" />
+        <div className="absolute top-1/3 right-1/4 w-3.5 h-3.5 rounded-full bg-purple-500/50 blur-xs animate-pulse" />
+        <div className="absolute bottom-1/3 left-1/3 w-2.5 h-2.5 rounded-full bg-violet-400/40 blur-xs animate-ping" />
       </div>
 
       {/* 2. HERO COMPOSITION: TITLE AT TOP */}

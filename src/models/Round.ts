@@ -39,6 +39,15 @@ const RoundSchema = new Schema(
       type: Number,
       required: true,
     },
+    startedAt: {
+  type: Date,
+  default: null,
+},
+
+endsAt: {
+  type: Date,
+  default: null,
+},
     configuration: {
       problemCount: {
         type: Number,

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import AuthGuard from '@/app/guards/AuthGuard';
 import ParticipantLayout from '@/components/layout/ParticipantLayout';
 import EventProgress from '@/components/event/EventProgress';
 import EventWaitingScreen from '@/components/event/EventWaitingScreen';
@@ -25,7 +26,7 @@ const GUIDELINE_TOPICS: GuidelineTopic[] = [
   { id: 'loops', title: 'Loops & Patterns', description: 'Using iteration to build up repeated structures and results.' },
 ];
 
-export default function WorkshopPage() {
+function WorkshopPageContent() {
   const eventState = useEventState();
   const { loading, error, roundEndsAt, refresh } = eventState;
 
@@ -117,5 +118,13 @@ export default function WorkshopPage() {
         </div>
       </div>
     </ParticipantLayout>
+  );
+}
+
+export default function WorkshopPage() {
+  return (
+    <AuthGuard requiredRole="PARTICIPANT">
+      <WorkshopPageContent />
+    </AuthGuard>
   );
 }

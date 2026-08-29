@@ -1,0 +1,10 @@
+--- src/types/problem.ts
++++ src/types/problem.ts
+@@ -29,6 +29,7 @@
+   activeTeamMember?: 'member1' | 'member2';
+   currentUserId?: string;
+   forceSwitchAfterMs?: number;
++  serverCode?: string | null;
+   // constraint mode
+   activeConstraints?: CodeConstraint[];
+   // standard

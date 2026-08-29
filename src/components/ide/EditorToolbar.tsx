@@ -119,7 +119,7 @@ export default function EditorToolbar({
         variant="danger"
       >
         <p className="font-mono text-xs">
-          This will wipe your current code for {language === 'cpp' ? 'C++' : language === 'python' ? 'Python' : language === 'java' ? 'Java' : 'JavaScript'} and restore the default template.
+          This will wipe your current code for {language === 'cpp' ? 'C++' : language === 'c' ? 'C' : language === 'python' ? 'Python' : language === 'java' ? 'Java' : language === 'go' ? 'Go' : 'JavaScript'} and restore the default template.
         </p>
       </Modal>
     </div>

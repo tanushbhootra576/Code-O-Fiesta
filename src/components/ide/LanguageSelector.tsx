@@ -15,9 +15,11 @@ export default function LanguageSelector({ currentLanguage, onChange }: Language
 
   const languages: { val: SupportedLanguage; label: string }[] = [
     { val: 'cpp', label: 'C++ 17' },
-    { val: 'python', label: 'Python 3' },
-    { val: 'java', label: 'Java 17' },
+    { val: 'c', label: 'C (GCC)' },
+    { val: 'python', label: 'Python (3.8)' },
+    { val: 'java', label: 'Java (OpenJDK 13)' },
     { val: 'javascript', label: 'JavaScript (Node 18)' },
+    { val: 'go', label: 'Go (1.13)' },
   ];
 
   const handleSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {

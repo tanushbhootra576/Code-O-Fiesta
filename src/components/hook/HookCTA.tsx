@@ -17,7 +17,7 @@ export default function HookCTA({ className = '', isVisible = true }: HookCTAPro
     >
       <Link
         href="/login"
-        className="group relative inline-flex items-center gap-3 px-8 sm:px-12 py-4 sm:py-5 text-sm sm:text-base font-mono font-extrabold uppercase tracking-[0.2em] rounded-xl bg-gradient-to-r from-rose-600 via-rose-500 to-rose-600 text-white shadow-[0_0_30px_rgba(230,57,70,0.5)] hover:shadow-[0_0_50px_rgba(230,57,70,0.8)] hover:scale-105 active:scale-95 transition-all duration-300 border border-rose-400/40 focus:ring-4 focus:ring-rose-400 focus:outline-none overflow-hidden"
+        className="group relative inline-flex items-center gap-3 px-8 sm:px-12 py-4 sm:py-5 text-sm sm:text-base font-mono font-extrabold uppercase tracking-[0.2em] rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 text-white shadow-[0_0_35px_rgba(139,92,246,0.6)] hover:shadow-[0_0_55px_rgba(139,92,246,0.9)] hover:scale-105 active:scale-95 transition-all duration-300 border border-purple-400/40 focus:ring-4 focus:ring-purple-400 focus:outline-none overflow-hidden"
       >
         {/* Animated Light Sweep Effect on Hover */}
         <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />

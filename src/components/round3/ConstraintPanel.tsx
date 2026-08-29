@@ -10,7 +10,7 @@ interface ConstraintPanelProps {
 export default function ConstraintPanel({ isSolved, submitResult, submissionCount }: ConstraintPanelProps) {
   const violations = submitResult?.constraintViolations || [];
 
-  // Determine if each bonus is earned/missed
+  const hasResult = submitResult !== null;
   const isAccepted = submitResult?.status === 'accepted';
 
   // 1. Ouroboros (30 PTS): Solve using recursion (no loops)
@@ -19,7 +19,7 @@ export default function ConstraintPanel({ isSolved, submitResult, submissionCoun
     v.constraintId === 'no-loops' || 
     v.constraintId === 'recursion-required'
   );
-  const ouroborosStatus = !isSolved 
+  const ouroborosStatus = !hasResult 
     ? 'pending' 
     : (isAccepted && !ouroborosViolated) ? 'earned' : 'missed';
 
@@ -29,13 +29,13 @@ export default function ConstraintPanel({ isSolved, submitResult, submissionCoun
     v.constraintId === 'max-lines' || 
     v.constraintId === 'line-count'
   );
-  const shortStatus = !isSolved 
+  const shortStatus = !hasResult 
     ? 'pending' 
     : (isAccepted && !shortViolated) ? 'earned' : 'missed';
 
   // 3. One Shot Wonder (40 PTS): Accepted on first submission attempt
   // submissionCount is the count of submissions before this one
-  const oneShotStatus = !isSolved 
+  const oneShotStatus = !hasResult 
     ? 'pending' 
     : (isAccepted && submissionCount <= 1) ? 'earned' : 'missed';
 
@@ -46,7 +46,7 @@ export default function ConstraintPanel({ isSolved, submitResult, submissionCoun
       points: 30,
       description: 'Solve using recursion (no loops allowed).',
       status: ouroborosStatus,
-      message: ouroborosViolated ? (violations.find(v => v.constraintId === 'ouroboros' || v.constraintId === 'no-loops' || v.constraintId === 'recursion-required')?.message || 'Loops detected or recursion missing') : ''
+      message: ouroborosViolated ? (violations.find(v => v.constraintId === 'ouroboros' || v.constraintId === 'no-loops' || v.constraintId === 'recursion-required')?.message || 'Loops detected or recursion missing') : (!isAccepted ? 'Submission must be accepted' : '')
     },
     {
       id: 'shortAndSweet',
@@ -54,7 +54,7 @@ export default function ConstraintPanel({ isSolved, submitResult, submissionCoun
       points: 20,
       description: 'Solve within the character/line threshold.',
       status: shortStatus,
-      message: shortViolated ? (violations.find(v => v.constraintId === 'shortAndSweet' || v.constraintId === 'max-lines' || v.constraintId === 'line-count')?.message || 'Code exceeds length threshold') : ''
+      message: shortViolated ? (violations.find(v => v.constraintId === 'shortAndSweet' || v.constraintId === 'max-lines' || v.constraintId === 'line-count')?.message || 'Code exceeds length threshold') : (!isAccepted ? 'Submission must be accepted' : '')
     },
     {
       id: 'oneShotWonder',
@@ -62,7 +62,7 @@ export default function ConstraintPanel({ isSolved, submitResult, submissionCoun
       points: 40,
       description: 'Get the problem accepted on your first attempt.',
       status: oneShotStatus,
-      message: submissionCount > 1 ? 'Missed — solved in multiple attempts' : ''
+      message: !isAccepted ? 'Submission must be accepted' : (submissionCount > 1 ? 'Missed — solved in multiple attempts' : '')
     }
   ];
 

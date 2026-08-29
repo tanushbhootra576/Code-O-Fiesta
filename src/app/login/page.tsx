@@ -4,12 +4,12 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import StarfieldBackground from '@/components/common/StarfieldBackground';
 import CursorTrail from '@/components/common/CursorTrail';
-import { authService } from '@/services/auth';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [teamName, setTeamName] = useState('CODEWARRIORS');
-  const [passcode, setPasscode] = useState('1234');
+  const [email, setEmail] = useState('team@test.com');
+  const [password, setPassword] = useState('TestPassword123');
+  const [teamMember, setTeamMember] = useState('MEMBER_1');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,15 +18,30 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    const result = await authService.login({ teamName, passcode });
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          teamMember,
+        }),
+      });
 
-    if (result.success) {
-          router.push('/dashboard');
-      return;
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Login failed');
+      }
+
+      router.push('/dashboard');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
+      setLoading(false);
     }
-
-    setError(result.error ?? 'Login failed. Please try again.');
-    setLoading(false);
   };
 
   return (
@@ -64,8 +79,13 @@ export default function LoginPage() {
             <div className="p-4 mb-6 rounded bg-[var(--surface-secondary)] border border-[var(--border-subtle)] text-xs text-[var(--text-secondary)]">
               <p className="font-mono font-semibold text-purple-400 mb-1">Demo Credentials</p>
               <p>
-                Use Team Name <strong className="text-white">CODEWARRIORS</strong> and Passcode{' '}
-                <strong className="text-white">1234</strong> to access the event dashboard.
+                Email: <strong className="text-white">team@test.com</strong>
+              </p>
+              <p>
+                Password: <strong className="text-white">TestPassword123</strong>
+              </p>
+              <p className="mt-2 text-[11px]">
+                Select Member 1 or Member 2 as Team Member
               </p>
             </div>
 
@@ -89,13 +109,13 @@ export default function LoginPage() {
           <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
                 <div>
                 <label className="block text-xs font-mono text-[var(--text-muted)] uppercase mb-1 tracking-wide">
-                  Team Name / ID
+                  Email
                   </label>
                   <input
-                    type="text"
-                    value={teamName}
-                    onChange={(e) => setTeamName(e.target.value)}
-                  placeholder="e.g. CODEWARRIORS"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  placeholder="e.g. team@test.com"
                     required
                   disabled={loading}
                   className="w-full px-3 py-2 bg-[var(--surface-secondary)] border border-[var(--border)] rounded text-xs text-white focus:outline-none focus:ring-2 focus:ring-[var(--focus)] disabled:opacity-50"
@@ -104,17 +124,33 @@ export default function LoginPage() {
 
                 <div>
                 <label className="block text-xs font-mono text-[var(--text-muted)] uppercase mb-1 tracking-wide">
-                    Passcode
+                    Password
                   </label>
                   <input
                     type="password"
-                    value={passcode}
-                    onChange={(e) => setPasscode(e.target.value)}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                     required
                   disabled={loading}
                   className="w-full px-3 py-2 bg-[var(--surface-secondary)] border border-[var(--border)] rounded text-xs text-white focus:outline-none focus:ring-2 focus:ring-[var(--focus)] disabled:opacity-50"
                   />
+                </div>
+
+                <div>
+                <label className="block text-xs font-mono text-[var(--text-muted)] uppercase mb-1 tracking-wide">
+                    Team Member
+                  </label>
+                  <select
+                    value={teamMember}
+                    onChange={(e) => setTeamMember(e.target.value)}
+                    required
+                    disabled={loading}
+                    className="w-full px-3 py-2 bg-[var(--surface-secondary)] border border-[var(--border)] rounded text-xs text-white focus:outline-none focus:ring-2 focus:ring-[var(--focus)] disabled:opacity-50"
+                  >
+                    <option value="MEMBER_1">Member 1</option>
+                    <option value="MEMBER_2">Member 2</option>
+                  </select>
                 </div>
 
             <button

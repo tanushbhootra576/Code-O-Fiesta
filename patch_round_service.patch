@@ -1,0 +1,37 @@
+--- src/app/api/_services/round.service.ts
++++ src/app/api/_services/round.service.ts
+@@ -749,6 +749,38 @@
+   };
+ }
+ 
++async function start(
++  input: Round2ScopedInput,
++): Promise<Round2StateView> {
++  const { actor, nowMs, roundNumber } = input;
++  await connectDB();
++  const { teamRound, roundDoc } = await getOrCreateTeamRound(actor);
++  const now = nowMs !== undefined ? new Date(nowMs) : new Date();
++
++  if (teamRound.status === TeamRoundStatus.NOT_STARTED) {
++    const durationSeconds = (roundDoc as any).durationSeconds ?? 3600;
++    teamRound.status = TeamRoundStatus.IN_PROGRESS;
++    teamRound.startedAt = now;
++    teamRound.endsAt = new Date(now.getTime() + durationSeconds * 1000);
++    
++    await ensureQuestionsInitialized(teamRound, roundDoc, now);
++    await teamRound.save();
++  } else {
++    await ensureQuestionsInitialized(teamRound, roundDoc, now);
++  }
++
++  return getState(input);
++}
++
+ export function roundErrorResponse(error: unknown): NextResponse {
+   if (error instanceof RoundRequestError) {
+@@ -791,4 +823,5 @@
+   getQuestions,
+   patchCode,
+   complete,
++  start,
+ };

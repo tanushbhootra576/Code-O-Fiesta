@@ -8,14 +8,39 @@ export type SubmissionStatus =
   | 'runtime_error' 
   | 'compilation_error';
 
-export interface RunResult {
-  stdout: string;
-  stderr: string;
-  exitCode: number;
-  timeMs: number;
-  memoryKb: number;
+export type Verdict = 'ACCEPTED' | 'WRONG_ANSWER' | 'TIME_LIMIT_EXCEEDED' | 'COMPILATION_ERROR' | 'RUNTIME_ERROR' | 'PENDING' | 'EXECUTED';
+
+export type TestCaseResult = {
+  caseNumber: number;
+  verdict: Verdict;
+  input?: string;
+  expectedOutput?: string;
+  actualOutput?: string;
+  stderr?: string;
+  compileOutput?: string;
+  executionTime?: number;
+  memory?: number;
   matchesExpected?: boolean;
-}
+};
+
+export type RunResult = 
+  | {
+      mode: "examples";
+      verdict: Verdict;
+      passed: number;
+      total: number;
+      cases: TestCaseResult[];
+    }
+  | {
+      mode: "custom";
+      status: string;
+      verdict: Verdict;
+      stdout: string;
+      stderr: string;
+      compileOutput: string;
+      executionTime: number;
+      memory: number;
+    };
 
 export interface SubmissionResult {
   id: string;

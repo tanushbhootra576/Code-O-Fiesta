@@ -38,36 +38,7 @@ export default function ProblemStatement({ statement, mode, activeConstraints }:
         </ReactMarkdown>
       </div>
 
-      {/* Constraint Crucible rules section */}
-      {mode === 'constraint' && activeConstraints && activeConstraints.length > 0 && (
-        <div className="mt-4 pt-4 border-t border-[var(--border-subtle)]">
-          <h3 className="text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider mb-3">
-            Crucible Constraint Rules
-          </h3>
-          <div className="flex flex-col gap-2">
-            {activeConstraints.map((c) => (
-              <div
-                key={c.id}
-                className="p-3 rounded-lg bg-cyan-950/15 border border-cyan-500/20 flex gap-2.5 items-start"
-              >
-                <div className="mt-0.5 text-cyan-400">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                </div>
-                <div>
-                  <h4 className="text-xs font-mono font-bold text-white mb-0.5">
-                    {c.label}
-                  </h4>
-                  <p className="text-[10px] font-mono text-slate-400 leading-normal">
-                    {c.description}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }

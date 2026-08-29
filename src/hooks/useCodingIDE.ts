@@ -7,12 +7,16 @@ export function getDefaultCode(language: SupportedLanguage): string {
   switch (language) {
     case 'cpp':
       return `#include <iostream>\nusing namespace std;\n\nint main() {\n    // write your code here\n    return 0;\n}`;
+    case 'c':
+      return `#include <stdio.h>\n\nint main() {\n    // write your code here\n    return 0;\n}`;
     case 'python':
       return `# write your code here\n`;
     case 'java':
       return `import java.util.*;\n\npublic class Main {\n    public static void main(String[] args) {\n        // write your code here\n    }\n}`;
     case 'javascript':
       return `// write your code here\n`;
+    case 'go':
+      return `package main\n\nimport "fmt"\n\nfunc main() {\n    // write your code here\n}\n`;
     default:
       return '';
   }
@@ -21,6 +25,7 @@ export function getDefaultCode(language: SupportedLanguage): string {
 export function useCodingIDE(
   problemId: string,
   mode: IDEMode,
+  roundNumber: number,
   roundConfig?: RoundIDEConfig,
   readOnly?: boolean
 ) {
@@ -38,7 +43,7 @@ export function useCodingIDE(
 
   // Load code from localStorage on mount or problemId/language change
   useEffect(() => {
-    if (problemId && language) {
+    if (problemId && language && mode !== 'relay') {
       const key = `problem_${problemId}_${language}`;
       const savedCode = localStorage.getItem(key);
       if (savedCode !== null) {
@@ -47,13 +52,39 @@ export function useCodingIDE(
         setCodeState(getDefaultCode(language));
       }
     }
-  }, [problemId, language]);
+  }, [problemId, language, mode]);
 
-  // Save code to localStorage when it changes
+  // Sync server code for relay mode
+  useEffect(() => {
+    if (mode === 'relay' && roundConfig?.serverCode !== undefined) {
+      const isLocked = roundConfig?.activeTeamMember !== roundConfig?.currentUserId;
+      if (isLocked && roundConfig?.serverCode !== null) {
+        setCodeState(roundConfig.serverCode);
+      } else if (!code && roundConfig?.serverCode) {
+        setCodeState(roundConfig.serverCode);
+      }
+    }
+  }, [mode, roundConfig?.serverCode, roundConfig?.activeTeamMember, roundConfig?.currentUserId]);
+
+  const syncTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Save code to localStorage when it changes, or sync to server for relay mode
   const setCode = (newCode: string) => {
     setCodeState(newCode);
-    if (problemId && language) {
-      localStorage.setItem(`problem_${problemId}_${language}`, newCode);
+    if (mode === 'relay') {
+      if (roundConfig?.activeTeamMember === roundConfig?.currentUserId) {
+        if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+        const t = setTimeout(() => {
+          import('@/services/problems').then((m) => {
+            m.problemsService.patchRound2Code(newCode).catch(console.error);
+          });
+        }, 1000);
+        syncTimerRef.current = t;
+      }
+    } else {
+      if (problemId && language) {
+        localStorage.setItem(`problem_${problemId}_${language}`, newCode);
+      }
     }
   };
 
@@ -106,7 +137,7 @@ export function useCodingIDE(
     setCode(defaultCode);
   };
 
-  const run = async () => {
+  const run = async (runMode: 'examples' | 'custom' = 'custom') => {
     if (isRunning) return;
     setIsRunning(true);
     setRunResult(null);
@@ -116,7 +147,8 @@ export function useCodingIDE(
         problemId,
         code,
         language,
-        customInput,
+        customInput: runMode === 'custom' ? customInput : undefined,
+        mode: runMode,
       });
       setRunResult(res);
     } catch (err: any) {
@@ -158,6 +190,7 @@ export function useCodingIDE(
         problemId,
         code,
         language,
+        roundNumber,
         isFirstAttempt,
       });
 

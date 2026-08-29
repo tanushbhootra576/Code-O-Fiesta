@@ -1,0 +1,59 @@
+--- src/hooks/useCodingIDE.ts
++++ src/hooks/useCodingIDE.ts
+@@ -4,6 +4,7 @@
+ import { SubmissionResult, RunResult } from '@/types/submission';
+ import { IDEMode, RoundIDEConfig, SupportedLanguage } from '@/types/problem';
+ import { hasComments, getDefaultCode } from '@/utils/ast/comments';
++import { problemsService } from '@/services/problems';
+ 
+ export interface UseCodingIDEReturn {
+   code: string;
+@@ -41,19 +42,30 @@
+ 
+   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+ 
++  // If server code is provided in relay mode, sync from server to state (when it's NOT our turn or on first load)
++  useEffect(() => {
++    if (mode === 'relay' && roundConfig?.serverCode !== undefined) {
++      const isLocked = roundConfig?.activeTeamMember !== roundConfig?.currentUserId;
++      if (isLocked && roundConfig?.serverCode) {
++        setCodeState(roundConfig.serverCode);
++      } else if (!code && roundConfig?.serverCode) {
++        // Initial load for active member
++        setCodeState(roundConfig.serverCode);
++      }
++    }
++  }, [mode, roundConfig?.serverCode, roundConfig?.activeTeamMember, roundConfig?.currentUserId]);
++
+   // Load code from localStorage on mount or problemId/language change
+   useEffect(() => {
+-    if (problemId && language) {
++    if (problemId && language && mode !== 'relay') {
+       const key = `problem_${problemId}_${language}`;
+       const savedCode = localStorage.getItem(key);
+       if (savedCode !== null) {
+         setCodeState(savedCode);
+       } else {
+         setCodeState(getDefaultCode(language));
+       }
+     }
+-  }, [problemId, language]);
++  }, [problemId, language, mode]);
+ 
+   // Save code to localStorage when it changes
+   const setCode = (newCode: string) => {
+     setCodeState(newCode);
+-    if (problemId && language) {
++    if (problemId && language && mode !== 'relay') {
+       localStorage.setItem(`problem_${problemId}_${language}`, newCode);
+     }
++    if (mode === 'relay' && roundConfig?.activeTeamMember === roundConfig?.currentUserId) {
++      // Debounce the API call slightly to prevent spamming
++      const t = setTimeout(() => {
++        problemsService.patchRound2Code(newCode).catch(console.error);
++      }, 1000);
++      return () => clearTimeout(t);
++    }
+   };
+ 
+   const setLanguage = (newLang: SupportedLanguage) => {

@@ -1,0 +1,10 @@
+--- src/app/api/_services/round.service.ts
++++ src/app/api/_services/round.service.ts
+@@ -546,6 +546,7 @@
+       activeMember: (q.activeMember as TeamMember) ?? null,
+       phase: (q.phase as Round2Phase) ?? Round2Phase.MEMBER_1,
+       problem: visible ? problem ?? null : null,
++      problemId: q.problemId ?? null,
+     };
+   });
+ 

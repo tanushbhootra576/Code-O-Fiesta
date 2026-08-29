@@ -27,7 +27,7 @@ export default function EditorStatus({
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const displayLang = language === 'cpp' ? 'C++ 17' : language === 'python' ? 'Python 3' : language === 'java' ? 'Java 17' : 'JavaScript';
+  const displayLang = language === 'cpp' ? 'C++ 17' : language === 'c' ? 'C (GCC)' : language === 'python' ? 'Python 3' : language === 'java' ? 'Java 17' : language === 'go' ? 'Go 1.13' : 'JavaScript';
 
   return (
     <div className="flex items-center justify-between px-4 py-1 bg-[#080814] border-t border-[var(--border)] text-[10px] font-mono text-slate-500 select-none">

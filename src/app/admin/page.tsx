@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import AuthGuard from '@/app/guards/AuthGuard';
 import AdminLayout from '@/components/layout/AdminLayout';
 import EventStatus from '@/components/event/EventStatus';
 import AdminDashboard from '@/components/admin/AdminDashboard';
@@ -9,12 +10,13 @@ import AdminRoundStatus from '@/components/admin/AdminRoundStatus';
 import AdminTeamTable from '@/components/admin/AdminTeamTable';
 import AdminSubmissionTable from '@/components/admin/AdminSubmissionTable';
 import AdminLeaderboard from '@/components/admin/AdminLeaderboard';
+import AdminNav from '@/components/admin/AdminNav';
 import LoadingState from '@/components/common/LoadingState';
 import ErrorState from '@/components/common/ErrorState';
 import { adminService } from '@/services/admin';
 import { leaderboardService } from '@/services/leaderboard';
 
-export default function AdminPage() {
+function AdminContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -124,7 +126,7 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <AdminLayout title="Organizer Control Panel">
+      <AdminLayout title="Organizer Control Panel" nav={<AdminNav />}>
         <LoadingState message="Loading administrative data feeds..." mode="full-page" />
       </AdminLayout>
     );
@@ -132,7 +134,7 @@ export default function AdminPage() {
 
   if (error) {
     return (
-      <AdminLayout title="Organizer Control Panel">
+      <AdminLayout title="Organizer Control Panel" nav={<AdminNav />}>
         <ErrorState
           title="Administrative Sync Failed"
           message={error}
@@ -151,10 +153,11 @@ export default function AdminPage() {
     <AdminLayout
       title="Organizer Control Panel"
       subtitle="VITC Code-O-Fiesta Live Event Operations"
+      nav={<AdminNav />}
       actions={<EventStatus status={statusType} label={statusLabel} />}
     >
       <div className="flex flex-col gap-6">
-        
+
         {/* Quick telemetry metrics */}
         <AdminDashboard
           totalTeams={teams.length}
@@ -180,7 +183,7 @@ export default function AdminPage() {
 
         {/* Main interactive grids */}
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-          
+
           {/* Teams Directory Table */}
           <div className="xl:col-span-8">
             <AdminTeamTable
@@ -200,5 +203,13 @@ export default function AdminPage() {
 
       </div>
     </AdminLayout>
+  );
+}
+
+export default function AdminPage() {
+  return (
+    <AuthGuard requiredRole="ADMIN">
+      <AdminContent />
+    </AuthGuard>
   );
 }

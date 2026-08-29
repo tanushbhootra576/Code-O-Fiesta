@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import ParticipantLayout from '@/components/layout/ParticipantLayout';
 import Maze from '@/components/round1/Maze';
+import { problemsService } from '@/services/problems';
 
 // Right sidebar content matching the screenshot
 function Round1Overview() {
@@ -106,15 +107,71 @@ function Round1Overview() {
   );
 }
 
+const PATH_NAME_TO_ID: Record<string, number> = {
+  'TRIANGLE': 1,
+  'CIRCLE': 2,
+  'SQUARE': 3,
+  'STAR': 4,
+};
+
+const PATH_ID_TO_NAME: Record<number, string> = {
+  1: 'TRIANGLE',
+  2: 'CIRCLE',
+  3: 'SQUARE',
+  4: 'STAR',
+};
+
 export default function Round1MazePage() {
   const router = useRouter();
+  // null = still checking, false = not locked, true = locked (redirect pending)
+  const [checking, setChecking] = useState(true);
 
-  const handlePathConfirmed = (pathId: number) => {
-  // Persist the choice (later this becomes an API call)
-  localStorage.setItem('cof-round1-path', String(pathId));
-  sessionStorage.removeItem('cof-round1-revealed'); // so reveal shows again
-  router.push('/round-1');
-};
+  useEffect(() => {
+    // Ask the backend whether this team's path is already locked.
+    // This is the authoritative check — localStorage is only a UI hint.
+    problemsService
+      .fetchRoundPathStatus(1)
+      .then(({ locked, path }) => {
+        if (locked) {
+          // Keep localStorage in sync so the round-1 page still knows the path.
+          if (path && PATH_NAME_TO_ID[path]) {
+            localStorage.setItem('cof-round1-path', String(PATH_NAME_TO_ID[path]));
+          }
+          router.replace('/round-1');
+        } else {
+          setChecking(false);
+        }
+      })
+      .catch(() => {
+        // If the check fails (network error, unauthenticated, etc.) let the
+        // maze render normally; the POST guard will still block a second lock.
+        setChecking(false);
+      });
+  }, [router]);
+
+  const handlePathConfirmed = async (pathId: number) => {
+    const pathName = PATH_ID_TO_NAME[pathId];
+    if (!pathName) return;
+
+    try {
+      setChecking(true);
+      await problemsService.saveRoundPath(1, pathName);
+      // Persist client-side so the round-1 page can read it without an extra API call.
+      localStorage.setItem('cof-round1-path', String(pathId));
+      sessionStorage.removeItem('cof-round1-revealed');
+      router.push('/round-1');
+    } catch (err: any) {
+      console.error('Failed to lock path on backend:', err);
+      alert(err.message || 'Failed to lock path. Please try again.');
+      setChecking(false);
+    }
+  };
+
+  // Render nothing while the backend check is in flight so the maze
+  // never flashes before the redirect fires.
+  if (checking) {
+    return null;
+  }
 
   return (
     <ParticipantLayout rightSidebar={<Round1Overview />}>
@@ -128,4 +185,4 @@ export default function Round1MazePage() {
       <Maze onPathConfirmed={handlePathConfirmed} />
     </ParticipantLayout>
   );
-}
+}

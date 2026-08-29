@@ -2,11 +2,13 @@
 
 import React, { useState } from 'react';
 import { Problem, IDEMode, CodeConstraint } from '@/types/problem';
+import { SubmissionResult } from '@/types/submission';
 import ProblemStatement from './ProblemStatement';
 import ProblemExamples from './ProblemExamples';
 import ProblemConstraints from './ProblemConstraints';
 import ProblemNavigation from './ProblemNavigation';
 import ProblemHiddenOverlay from '@/components/round2/ProblemHiddenOverlay';
+import ConstraintPanel from '@/components/round3/ConstraintPanel';
 
 interface ProblemPanelProps {
   problem: Problem;
@@ -18,6 +20,9 @@ interface ProblemPanelProps {
   onNavigate?: (id: string) => void;
   onUseAsInput?: (input: string) => void;
   submissionHistoryChild?: React.ReactNode;
+  submitResult?: SubmissionResult | null;
+  submissionCount?: number;
+  isSolved?: boolean;
 }
 
 export default function ProblemPanel({
@@ -30,6 +35,9 @@ export default function ProblemPanel({
   onNavigate,
   onUseAsInput,
   submissionHistoryChild,
+  submitResult = null,
+  submissionCount = 0,
+  isSolved = false,
 }: ProblemPanelProps) {
   const [activeTab, setActiveTab] = useState<'statement' | 'examples' | 'constraints' | 'submissions'>('statement');
 
@@ -117,7 +125,18 @@ export default function ProblemPanel({
           hideProblemStatement ? (
             <ProblemHiddenOverlay />
           ) : (
-            <ProblemStatement statement={statement} mode={mode} activeConstraints={activeConstraints} />
+            <>
+              <ProblemStatement statement={statement} mode={mode} activeConstraints={activeConstraints} />
+              {mode === 'constraint' && (
+                <div className="mt-2 pb-4 border-t border-[var(--border-subtle)]">
+                  <ConstraintPanel 
+                    isSolved={isSolved} 
+                    submitResult={submitResult} 
+                    submissionCount={submissionCount} 
+                  />
+                </div>
+              )}
+            </>
           )
         )}
         {activeTab === 'examples' && (

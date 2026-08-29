@@ -18,6 +18,8 @@ interface Round1ProblemListProps {
   problems: Round1Problem[];
   topic: string;
   pathLabel?: string;
+  loading?: boolean;
+  error?: string | null;
 }
 
 const statusConfig: Record<
@@ -74,9 +76,35 @@ export default function Round1ProblemList({
   problems,
   topic,
   pathLabel,
+  loading = false,
+  error = null,
 }: Round1ProblemListProps) {
   const solvedCount = problems.filter((p) => p.status === 'solved').length;
   const total = problems.length;
+
+  if (loading) {
+    return (
+      <div className="rounded-xl border border-[#1e224d] bg-[#0d0e24] p-6 text-sm text-slate-400">
+        Loading your assigned problems...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-6 text-sm text-red-200">
+        {error}
+      </div>
+    );
+  }
+
+  if (!problems.length) {
+    return (
+      <div className="rounded-xl border border-[#1e224d] bg-[#0d0e24] p-6 text-sm text-slate-400">
+        No Round 1 problems have been assigned to your team yet.
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-5">

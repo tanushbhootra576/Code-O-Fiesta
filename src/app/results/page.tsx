@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import AuthGuard from '@/app/guards/AuthGuard';
 import ParticipantLayout from '@/components/layout/ParticipantLayout';
 import EventProgress from '@/components/event/EventProgress';
 import CompletionScreen from '@/components/results/CompletionScreen';
@@ -35,7 +36,7 @@ interface ResultsData {
   roundBreakdowns: RoundBreakdown[];
 }
 
-export default function ResultsPage() {
+function ResultsPageContent() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -150,5 +151,13 @@ export default function ResultsPage() {
         />
       </div>
     </ParticipantLayout>
+  );
+}
+
+export default function ResultsPage() {
+  return (
+    <AuthGuard requiredRole="PARTICIPANT">
+      <ResultsPageContent />
+    </AuthGuard>
   );
 }

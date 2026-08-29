@@ -101,6 +101,14 @@ const ProblemSchema = new Schema(
         default: null,
       },
     },
+    cpuTimeLimit: {
+      type: Number,
+      default: 2.0, // seconds
+    },
+    memoryLimit: {
+      type: Number,
+      default: 128000, // KB (128 MB)
+    },
     isActive: {
       type: Boolean,
       default: true,

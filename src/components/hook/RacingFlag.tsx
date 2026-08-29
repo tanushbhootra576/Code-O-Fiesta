@@ -20,35 +20,35 @@ export default function RacingFlag({ className = '', isWaving = true }: RacingFl
         }`}
       >
         <svg
-          className="w-72 sm:w-96 md:w-[480px] h-auto drop-shadow-[0_15px_30px_rgba(230,57,70,0.4)]"
+          className="w-72 sm:w-96 md:w-[480px] h-auto drop-shadow-[0_15px_35px_rgba(139,92,246,0.5)]"
           viewBox="0 0 540 220"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
           <defs>
-            {/* Flag Cloth Red Gradient */}
+            {/* Flag Cloth Purple/Violet Gradient */}
             <linearGradient id="flagBg" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#e63946" />
-              <stop offset="40%" stopColor="#d90429" />
-              <stop offset="85%" stopColor="#9b111e" />
-              <stop offset="100%" stopColor="#0f131d" />
+              <stop offset="0%" stopColor="#9333ea" />
+              <stop offset="40%" stopColor="#7c3aed" />
+              <stop offset="85%" stopColor="#4c1d95" />
+              <stop offset="100%" stopColor="#0d0e24" />
             </linearGradient>
 
             {/* Checkered Racing Border Pattern */}
             <pattern id="checkeredPattern" width="16" height="16" patternUnits="userSpaceOnUse">
               <rect width="8" height="8" fill="#ffffff" />
-              <rect x="8" width="8" height="8" fill="#000000" />
-              <rect y="8" width="8" height="8" fill="#000000" />
+              <rect x="8" width="8" height="8" fill="#090a1a" />
+              <rect y="8" width="8" height="8" fill="#090a1a" />
               <rect x="8" y="8" width="8" height="8" fill="#ffffff" />
             </pattern>
 
             {/* Flag Shimmer / Cloth Fold Effect */}
             <linearGradient id="foldShine" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.1" />
-              <stop offset="25%" stopColor="#000000" stopOpacity="0.2" />
-              <stop offset="50%" stopColor="#ffffff" stopOpacity="0.15" />
-              <stop offset="75%" stopColor="#000000" stopOpacity="0.25" />
-              <stop offset="100%" stopColor="#ffffff" stopOpacity="0.05" />
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.12" />
+              <stop offset="25%" stopColor="#000000" stopOpacity="0.25" />
+              <stop offset="50%" stopColor="#ffffff" stopOpacity="0.18" />
+              <stop offset="75%" stopColor="#000000" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0.08" />
             </linearGradient>
           </defs>
 
@@ -91,7 +91,7 @@ export default function RacingFlag({ className = '', isWaving = true }: RacingFl
               fontFamily="system-ui, -apple-system, sans-serif"
               fontWeight="900"
               letterSpacing="2"
-              className="drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]"
+              className="drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]"
             >
               CODE-O-FIESTA
             </text>
@@ -106,7 +106,7 @@ export default function RacingFlag({ className = '', isWaving = true }: RacingFl
               fontFamily="monospace"
               fontWeight="800"
               letterSpacing="3"
-              className="drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
+              className="drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]"
             >
               BY CODECHEF VITC
             </text>
