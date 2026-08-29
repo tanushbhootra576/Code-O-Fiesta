@@ -255,6 +255,25 @@ export async function GET(
     } else if (status === 'accepted' && resolvedRoundNumber !== 3) {
       // For rounds 1 & 2, just report base points
       pointsEarned = 50;
+
+      const effectiveTeamId = teamId ?? cachedMeta?.teamId ?? (isDb ? dbSubmission?.teamId?.toString() : null);
+      const effectiveRoundId = cachedMeta?.roundId ?? (isDb ? dbSubmission?.roundId?.toString() : null);
+      const effectiveProblemId = cachedMeta?.problemId ?? (isDb ? dbSubmission?.problemId?.toString() : null);
+
+      if (effectiveTeamId && effectiveRoundId && effectiveProblemId) {
+        try {
+          const { persistRound1And2Result } = await import('../../_services/scoring.service');
+          await persistRound1And2Result(
+            new Types.ObjectId(effectiveTeamId),
+            new Types.ObjectId(effectiveRoundId),
+            effectiveProblemId,
+            resolvedRoundNumber ?? 1,
+            pointsEarned
+          );
+        } catch (e) {
+          console.error('Failed to persist round 1/2 result:', e);
+        }
+      }
     }
 
     return NextResponse.json({
