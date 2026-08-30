@@ -14,10 +14,18 @@ export async function loginUser({
 }: LoginInput) {
   await connectDB();
 
-  const user = await User.findOne({
+  let user = await User.findOne({
     email,
     teamMember,
   });
+
+  // Fallback for Admin users who don't have a teamMember field
+  if (!user) {
+    user = await User.findOne({
+      email,
+      role: 'ADMIN',
+    });
+  }
 
   if (!user) {
     throw new UnauthorizedError(
