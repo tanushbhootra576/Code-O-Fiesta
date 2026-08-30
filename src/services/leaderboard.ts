@@ -1,163 +1,121 @@
 import { authService } from './auth';
 
-// Standings interface
-interface RoundDetail {
-  roundNumber: number;
-  roundName: string;
-  status: string;
-  score: number;
-  completedAt: string | null;
-}
-
-interface StandingTeam {
-  rank: number;
-  teamId: string;
-  name: string;
-  status: string;
-  totalScore: number;
-  completedRoundsCount: number;
-  roundDetails: RoundDetail[];
-}
-
-function getSortedStandings(): StandingTeam[] {
-  if (typeof window === 'undefined') {
-    return [];
-  }
-
-  const stateStr = window.localStorage.getItem('cof_admin_state');
-  if (!stateStr) {
-    return [];
-  }
-
-  try {
-    const state = JSON.parse(stateStr);
-    const teams = state.teams || [];
-
-    const leaderboardData = teams.map((team: any) => {
-      let completedRoundsCount = 0;
-      let latestCompletionTime = 0;
-
-      const roundDetails = team.roundProgress.map((rp: any) => {
-        if (rp.status === 'COMPLETED') {
-          completedRoundsCount++;
-          // For mocking tie-break timestamps, default to round completion order
-          latestCompletionTime += rp.roundNumber * 10000;
+export const leaderboardService = {
+  getLeaderboard: async (): Promise<any> => {
+    try {
+      const response = await fetch('/api/leaderboard', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to fetch leaderboard');
+      }
+      
+      const backendStandings = Array.isArray(data) ? data : (data.data || []);
+      return backendStandings.map((item: any) => {
+        let completedRoundsCount = 0;
+        const roundDetails = [];
+        
+        for (let i = 1; i <= 3; i++) {
+          const status = item.completionInfo?.[i] || 'NOT_STARTED';
+          if (status === 'COMPLETED' || status === 'SOLVED') completedRoundsCount++;
+          roundDetails.push({
+            roundNumber: i,
+            roundName: `Round ${i}`, // fallback, not provided by backend summary
+            status: status,
+            score: item.roundScores?.[i] || 0,
+            completedAt: null
+          });
         }
+        
+        return {
+          rank: item.rank,
+          teamId: item.teamId,
+          name: item.teamName,
+          status: item.status || 'ACTIVE',
+          totalScore: item.totalScore,
+          completedRoundsCount,
+          roundDetails
+        };
+      });
+    } catch (error: any) {
+      console.error('Error fetching leaderboard:', error);
+      return [];
+    }
+  },
+
+  getResults: async (): Promise<any> => {
+    try {
+      // Get current logged in team name
+      const me = await authService.getMe();
+      if (!me.authenticated || !me.team) {
+        return { error: 'Not authenticated or not part of a team' };
+      }
+
+      // Fetch from API
+      const response = await fetch('/api/results/me', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to fetch results');
+      }
+
+      const teamResults = Array.isArray(data) ? data[0] : (data.data || data);
+
+      // We need rank, so let's fetch leaderboard too
+      const leaderboard = await leaderboardService.getLeaderboard();
+      const matchedStanding = leaderboard.find((s: any) => s.teamId === me.team.id);
+      const rank = matchedStanding ? matchedStanding.rank : 0;
+
+      const roundNames = {
+        1: 'Maze of Fate',
+        2: 'Blind Relay',
+        3: 'Constraint Crucible'
+      };
+
+      const roundBreakdowns = teamResults.rounds.map((rp: any) => {
+        let achievements: string[] = [];
+        if (rp.achievements) {
+          if (rp.achievements.baseSolve) achievements.push('Problem Solved');
+          if (rp.achievements.ouroboros) achievements.push('Ouroboros Mod Passed');
+          if (rp.achievements.shortAndSweet) achievements.push('Short & Sweet Passed');
+          if (rp.achievements.oneShotWonder) achievements.push('One Shot Wonder');
+        }
+
         return {
           roundNumber: rp.roundNumber,
-          roundName: rp.roundName,
-          status: rp.status,
-          score: rp.score || 0,
-          completedAt: rp.status === 'COMPLETED' ? new Date().toISOString() : null,
+          roundName: roundNames[rp.roundNumber as keyof typeof roundNames] || `Round ${rp.roundNumber}`,
+          status: rp.status || 'PENDING',
+          baseScore: rp.score || 0, // Simplified since backend doesn't split base/bonus yet for R1/R2
+          bonusScore: 0,
+          totalScore: rp.score || 0,
+          completedAt: rp.completedAt || null,
+          achievements,
         };
       });
 
       return {
-        teamId: team.id,
-        name: team.name,
-        status: team.status,
-        totalScore: team.totalScore,
-        completedRoundsCount,
-        latestCompletionTime: latestCompletionTime || Infinity,
-        roundDetails,
+        authenticated: true,
+        team: {
+          id: me.team.id,
+          name: me.team.name,
+          status: teamResults.status || 'ACTIVE',
+          members: [me.teamMember], // We might not have all members from /me, but we can show the logged in one
+        },
+        results: {
+          rank,
+          grandTotalScore: teamResults.totalScore || 0,
+          roundBreakdowns,
+        },
       };
-    });
-
-    // Sort:
-    // 1. ACTIVE/COMPLETED first, DISQUALIFIED last
-    // 2. Score desc
-    // 3. Completed rounds count desc
-    // 4. completion time asc
-    leaderboardData.sort((a: any, b: any) => {
-      const statusA = a.status === 'DISQUALIFIED' ? 1 : 0;
-      const statusB = b.status === 'DISQUALIFIED' ? 1 : 0;
-      if (statusA !== statusB) return statusA - statusB;
-
-      if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
-      if (b.completedRoundsCount !== a.completedRoundsCount) return b.completedRoundsCount - a.completedRoundsCount;
-      return a.latestCompletionTime - b.latestCompletionTime;
-    });
-
-    return leaderboardData.map((team: any, index: number) => ({
-      rank: index + 1,
-      ...team,
-    }));
-  } catch {
-    return [];
-  }
-}
-
-export const leaderboardService = {
-  getLeaderboard: async (): Promise<any> => {
-    // Simulate slight delay
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    return getSortedStandings();
-  },
-
-  getResults: async (): Promise<any> => {
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    
-    // Get current logged in team name
-    const me = await authService.getMe();
-    const activeTeamName = me.authenticated && me.team ? me.team.name : 'TEAM_014';
-
-    const standings = getSortedStandings();
-    const matchedStanding = standings.find((s) => s.name === activeTeamName);
-    const rank = matchedStanding ? matchedStanding.rank : 4;
-
-    const stateStr = typeof window !== 'undefined' ? window.localStorage.getItem('cof_admin_state') : null;
-    let teamData: any = null;
-
-    if (stateStr) {
-      const state = JSON.parse(stateStr);
-      teamData = state.teams.find((t: any) => t.name === activeTeamName);
+    } catch (error: any) {
+      console.error('Error fetching results:', error);
+      return { error: error.message };
     }
-
-    // Default mock results if state not initialized
-    const scoreVal = teamData ? teamData.totalScore : 120;
-    const progress = teamData ? teamData.roundProgress : [
-      { roundNumber: 1, roundName: 'Maze of Fate', status: 'COMPLETED', score: 120 },
-      { roundNumber: 2, roundName: 'Blind Relay', status: 'IN_PROGRESS', score: 0 },
-      { roundNumber: 3, roundName: 'Constraint Crucible', status: 'NOT_STARTED', score: 0 },
-    ];
-
-    const roundBreakdowns = progress.map((rp: any) => {
-      let achievements: string[] = [];
-      if (rp.roundNumber === 1 && rp.status === 'COMPLETED') {
-        achievements.push('Path Chosen: CIRCLE');
-        achievements.push('Topic: STRING MANIPULATION');
-      } else if (rp.roundNumber === 2 && rp.status === 'COMPLETED') {
-        achievements.push('Questions Solved: 2/2');
-      } else if (rp.roundNumber === 3 && rp.status === 'COMPLETED') {
-        achievements.push('Ouroboros Mod Passed');
-        achievements.push('Short & Sweet Passed');
-      }
-
-      return {
-        roundNumber: rp.roundNumber,
-        roundName: rp.roundName,
-        status: rp.status,
-        baseScore: rp.score > 50 ? rp.score - 30 : rp.score,
-        bonusScore: rp.score > 50 ? 30 : 0,
-        totalScore: rp.score,
-        completedAt: rp.status === 'COMPLETED' ? new Date().toISOString() : null,
-        achievements,
-      };
-    });
-
-    return {
-      authenticated: true,
-      team: {
-        id: teamData ? teamData.id : 'team_team_014',
-        name: activeTeamName,
-        status: teamData ? teamData.status : 'ACTIVE',
-        members: teamData ? teamData.members.map((m: any) => m.name) : ['TEAM_014 Captain', 'TEAM_014 Member'],
-      },
-      results: {
-        rank,
-        grandTotalScore: scoreVal,
-        roundBreakdowns,
-      },
-    };
   },
 };

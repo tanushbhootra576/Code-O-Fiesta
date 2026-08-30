@@ -7,6 +7,9 @@ import { TeamStatus, RoundStatus, TeamRoundStatus } from '@/constants/event';
 
 export async function getLeaderboard(adminView = false) {
   await connectDB();
+  
+  // Ensure Round is registered before population
+  Round.init();
 
   // Find all teams
   const teams = await Team.find({ status: { $ne: TeamStatus.DISQUALIFIED } }).lean();
@@ -60,6 +63,7 @@ export async function getLeaderboard(adminView = false) {
 
 export async function getTeamResults(teamId: string) {
   await connectDB();
+  Round.init();
   
   const team = await Team.findById(teamId).lean();
   if (!team) throw new Error('Team not found');
