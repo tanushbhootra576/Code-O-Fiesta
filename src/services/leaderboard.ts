@@ -105,7 +105,7 @@ export const leaderboardService = {
           id: me.team.id,
           name: me.team.name,
           status: teamResults.status || 'ACTIVE',
-          members: [me.teamMember], // We might not have all members from /me, but we can show the logged in one
+          members: me.team.members, // Return all members since teamMember isn't available
         },
         results: {
           rank,
